@@ -266,6 +266,74 @@ body {
 mark { background:#FFF3CD; border-radius:3px; padding:0 2px; font-style:normal; }
 
 /* ══════════════════════════════════════
+   T-SHIRT ORDER SUMMARY
+══════════════════════════════════════ */
+.ts-accordion {
+  background: var(--card-bg); border-radius: 18px;
+  box-shadow: 0 4px 18px rgba(26,39,68,.07);
+  margin-bottom: 18px; overflow: hidden;
+}
+.ts-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px; cursor: pointer; user-select: none;
+  transition: background .15s;
+}
+.ts-header:hover { background: #F5F9FF; }
+.ts-header-left  { display:flex; align-items:center; gap:10px; }
+.ts-title        { font-family:'Fredoka One',cursive; font-size:1.2rem; color:var(--navy); }
+.ts-chevron {
+  font-size:.85rem; color:var(--muted); transition: transform .3s ease;
+  display:inline-block;
+}
+.ts-chevron.open { transform: rotate(180deg); }
+.ts-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height .4s ease, padding .3s ease;
+  padding: 0 22px;
+}
+.ts-body.open { max-height: 1000px; padding: 0 22px 22px; }
+
+.tshirt-total-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(79,195,247,.12); border:1px solid rgba(79,195,247,.3);
+  color:#0369a1; border-radius:99px; padding:4px 12px;
+  font-size:.72rem; font-weight:800;
+}
+.tshirt-summary { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:4px; }
+.tshirt-group-title {
+  font-size:.68rem; font-weight:800; text-transform:uppercase;
+  letter-spacing:.7px; color:var(--muted); margin-bottom:12px;
+  display:flex; align-items:center; gap:7px;
+}
+.tshirt-group-badge {
+  border-radius:99px; padding:2px 9px; font-size:.65rem; font-weight:800;
+}
+.tshirt-size-row { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+.tshirt-size-lbl {
+  font-weight:800; font-size:.78rem; color:var(--navy);
+  width:58px; flex-shrink:0; text-align:center;
+  background:var(--page-bg); border:2px solid var(--border);
+  border-radius:8px; padding:3px 4px; white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis;
+}
+.tshirt-bar-track { flex:1; background:#EEF3FB; border-radius:30px; height:26px; overflow:hidden; }
+.tshirt-bar-fill  { height:100%; border-radius:30px; display:flex; align-items:center;
+  padding-left:10px; font-size:.72rem; font-weight:800; color:white;
+  min-width:60px; transition:width 1s ease; }
+.tshirt-bar-n { font-family:'Fredoka One',cursive; font-size:1rem; color:var(--navy); width:22px; text-align:right; flex-shrink:0; }
+.tshirt-divider { border:none; border-top:2px dashed var(--border); margin:16px 0; }
+.tshirt-grand { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+.tshirt-grand-chip {
+  display:flex; flex-direction:column; align-items:center;
+  background:var(--navy); border-radius:14px;
+  padding:10px 16px; min-width:68px; flex:1;
+}
+.gc-size { font-size:.65rem; font-weight:800; color:#A8C4E8; text-transform:uppercase; letter-spacing:.5px; }
+.gc-n    { font-family:'Fredoka One',cursive; font-size:1.7rem; color:var(--sun); line-height:1.1; }
+.gc-sub  { font-size:.6rem; color:#A8C4E8; margin-top:2px; font-weight:700; }
+.tshirt-waiting { text-align:center; padding:16px; color:var(--muted); font-size:.8rem; font-weight:700; }
+
+/* ══════════════════════════════════════
    LOADING / ERROR
 ══════════════════════════════════════ */
 .spin { animation: spin 1s linear infinite; display:inline-block; }
@@ -324,6 +392,7 @@ mark { background:#FFF3CD; border-radius:3px; padding:0 2px; font-style:normal; 
     <div id="k-stats" class="stat-row">
       <div class="loading-box" style="grid-column:1/-1"><span class="spin">⏳</span> Loading kids data…</div>
     </div>
+    <div id="k-tshirt"></div>
     <div id="k-content"></div>
   </div>
 </div>
@@ -495,8 +564,9 @@ function renderKids(rows){
         </div>
       </div>
     </div>`;
-  // store kids globally for search
+  // store kids globally for search + tshirt summary
   window._allKids = kids;
+  refreshTshirtSummary();
 }
 
 function buildKidsRow(c, query='') {
@@ -556,6 +626,167 @@ async function loadKids(){
   }catch(e){
     document.getElementById('k-stats').innerHTML=`<div class="err-box" style="grid-column:1/-1">⚠️ Could not load kids data.<br><small>${e.message}</small></div>`;
   }
+}
+
+/* ══════════════════════════════════════
+   ── T-SHIRT ORDER SUMMARY ──
+══════════════════════════════════════ */
+const SIZE_ORDER = ['2T','3T','4T','XS','S','M','L','XL','XXL','2XL','3XL',
+  '2-4','6-8','10-12','14-16'];
+
+function normalizeSize(raw) {
+  if (!raw) return null;
+  // strip whitespace, parens content like (Adult), (Youth), (KidsSize), (Kids Size)
+  let s = raw.trim()
+    .replace(/\(adult\)/gi, '')
+    .replace(/\(youth\)/gi, ' Youth')
+    .replace(/\(kids\s*size\)/gi, '')
+    .replace(/\(kidssize\)/gi, '')
+    .trim();
+
+  const u = s.toUpperCase().replace(/\s+/g,'');
+
+  // Kids age-range sizes — keep as-is but clean up
+  if (/^2[-–]4$/.test(s.replace(/\s/g,''))) return '2-4';
+  if (/^6[-–]8$/.test(s.replace(/\s/g,''))) return '6-8';
+  if (/^10[-–]12$/.test(s.replace(/\s/g,''))) return '10-12';
+  if (/^14[-–]16$/.test(s.replace(/\s/g,''))) return '14-16';
+
+  // Toddler
+  if (u==='2T') return '2T';
+  if (u==='3T') return '3T';
+  if (u==='4T') return '4T';
+
+  // Standard sizes
+  if (u==='XS'||u==='XSMALL'||u==='X-SMALL') return 'XS';
+  if (u==='S'||u==='SMALL') return 'S';
+  if (u==='M'||u==='MED'||u==='MEDIUM') return 'M';
+  if (u==='L'||u==='LARGE') return 'L';
+  if (u==='XL'||u==='XLARGE'||u==='X-LARGE') return 'XL';
+  if (u==='XXL'||u==='2XL'||u==='XXLARGE'||u==='XX-LARGE') return 'XXL';
+  if (u==='3XL'||u==='XXXL'||u==='XXXLARGE') return '3XL';
+
+  // Medium (Youth) etc — keep cleaned label
+  if (s) return s.replace(/\s+/g,' ').trim();
+  return null;
+}
+
+const SHIRT_COLORS = {
+  '2T':'#F48FB1','3T':'#CE93D8','4T':'#9FA8DA',
+  'XS':'#4FC3F7','S':'#66BB6A','M':'#FFB300','L':'#FF7043',
+  'XL':'#9C6FDE','XXL':'#26C6DA','2XL':'#5C6BC0','3XL':'#EC407A',
+  '2-4':'#80DEEA','6-8':'#80CBC4','10-12':'#A5D6A7','14-16':'#C5E1A5',
+  'default':'#7A8BAD'
+};
+
+function countShirts(people, getSize) {
+  const counts = {};
+  people.forEach(p => {
+    const size = normalizeSize(getSize(p));
+    if (size) counts[size] = (counts[size]||0) + 1;
+  });
+  return counts;
+}
+
+function sortedSizes(counts) {
+  const all = Object.keys(counts);
+  return all.sort((a,b)=>{
+    const ai = SIZE_ORDER.indexOf(a), bi = SIZE_ORDER.indexOf(b);
+    if (ai===-1 && bi===-1) return a.localeCompare(b);
+    if (ai===-1) return 1; if (bi===-1) return -1;
+    return ai - bi;
+  });
+}
+
+function renderShirtBars(counts, color) {
+  const sizes = sortedSizes(counts);
+  if (!sizes.length) return '<p style="color:var(--muted);font-size:.8rem">No data yet</p>';
+  const maxN = Math.max(...Object.values(counts), 1);
+  return sizes.map(s => `
+    <div class="tshirt-size-row">
+      <div class="tshirt-size-lbl">${s}</div>
+      <div class="tshirt-bar-track">
+        <div class="tshirt-bar-fill" style="width:${counts[s]/maxN*100}%;background:${color}">${counts[s]} shirt${counts[s]>1?'s':''}</div>
+      </div>
+      <div class="tshirt-bar-n">${counts[s]}</div>
+    </div>`).join('');
+}
+
+function refreshTshirtSummary() {
+  const el = document.getElementById('k-tshirt');
+  if (!el) return;
+
+  const kids = window._allKids || null;
+  const vols = window._allVols || null;
+
+  // show waiting state if either dataset not loaded yet
+  if (!kids && !vols) {
+    el.innerHTML = '';
+    return;
+  }
+
+  const kCounts = kids ? countShirts(kids, k => k.tshirt) : {};
+  const vCounts = vols ? countShirts(vols, v => v.tshirt) : {};
+
+  // combined totals
+  const combined = {...kCounts};
+  Object.entries(vCounts).forEach(([s,n]) => combined[s] = (combined[s]||0) + n);
+
+  const grandTotal = Object.values(combined).reduce((a,b)=>a+b, 0);
+  const kTotal     = Object.values(kCounts).reduce((a,b)=>a+b, 0);
+  const vTotal     = Object.values(vCounts).reduce((a,b)=>a+b, 0);
+
+  const grandChips = sortedSizes(combined).map(s => `
+    <div class="tshirt-grand-chip">
+      <div class="gc-size">${s}</div>
+      <div class="gc-n">${combined[s]}</div>
+      <div class="gc-sub">${kCounts[s]||0}K + ${vCounts[s]||0}V</div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="ts-accordion">
+      <div class="ts-header" onclick="toggleTshirt(this)">
+        <div class="ts-header-left">
+          <span style="font-size:1.3rem">👕</span>
+          <span class="ts-title">T-Shirt Order Summary</span>
+          <span class="tshirt-total-badge">🛒 ${grandTotal} total shirts</span>
+        </div>
+        <span class="ts-chevron">▼</span>
+      </div>
+      <div class="ts-body">
+        <div class="tshirt-summary">
+          <div>
+            <div class="tshirt-group-title">
+              🧒 Kids
+              <span class="tshirt-group-badge" style="background:rgba(79,195,247,.12);border:1px solid rgba(79,195,247,.3);color:#0369a1">${kTotal} shirts</span>
+            </div>
+            ${kids ? renderShirtBars(kCounts,'#4FC3F7') : '<p class="tshirt-waiting">⏳ Loading kids data…</p>'}
+          </div>
+          <div>
+            <div class="tshirt-group-title">
+              🙋 Volunteers
+              <span class="tshirt-group-badge" style="background:rgba(102,187,106,.12);border:1px solid rgba(102,187,106,.3);color:#166534">${vTotal} shirts</span>
+            </div>
+            ${vols ? renderShirtBars(vCounts,'#66BB6A') : '<p class="tshirt-waiting">⏳ Loading volunteer data…</p>'}
+          </div>
+        </div>
+        <hr class="tshirt-divider">
+        <div class="tshirt-group-title" style="margin-bottom:12px">
+          📦 Grand Total to Order
+          <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:.72rem">(kids + volunteers combined)</span>
+        </div>
+        <div class="tshirt-grand">${grandChips||'<p style="color:var(--muted);font-size:.8rem">No shirt data</p>'}</div>
+        <p style="font-size:.7rem;color:var(--muted);margin-top:12px;font-weight:700">💡 Each chip: total · K = kids · V = volunteers</p>
+      </div>
+    </div>`;
+}
+
+function toggleTshirt(header) {
+  const chevron = header.querySelector('.ts-chevron');
+  const body    = header.nextElementSibling;
+  const isOpen  = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
 }
 
 /* ══════════════════════════════════════
@@ -669,6 +900,7 @@ function renderVols(vols){
     </div>`;
 
   window._allVols = vols;
+  refreshTshirtSummary();
 }
 
 function buildVolCard(v, query='') {
