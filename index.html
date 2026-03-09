@@ -237,6 +237,35 @@ body {
 .chip-f { background:#FCE7F3; color:#9D174D; display:inline-block; padding:2px 8px; border-radius:20px; font-size:.7rem; font-weight:700; }
 
 /* ══════════════════════════════════════
+   SEARCH BAR
+══════════════════════════════════════ */
+.search-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.search-wrap { position:relative; flex:1; min-width:200px; }
+.search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:.95rem; pointer-events:none; }
+.search-input {
+  width:100%; padding:9px 36px 9px 36px;
+  border:2px solid var(--border); border-radius:99px;
+  font-family:'Nunito',sans-serif; font-size:.85rem; font-weight:600;
+  color:var(--navy); background:var(--page-bg);
+  outline:none; transition:border-color .15s, box-shadow .15s;
+}
+.search-input:focus { border-color:var(--sky); box-shadow:0 0 0 3px rgba(79,195,247,.15); }
+.search-input::placeholder { color:var(--muted); font-weight:600; }
+.btn-clear {
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; font-size:.85rem;
+  color:var(--muted); display:none; line-height:1; padding:2px 4px;
+  border-radius:50%; transition:color .15s;
+}
+.btn-clear:hover { color:var(--coral); }
+.btn-clear.vis { display:block; }
+.search-count { font-size:.78rem; font-weight:700; color:var(--muted); white-space:nowrap; flex-shrink:0; }
+.search-count strong { color:var(--navy); font-family:'Fredoka One',cursive; font-size:.95rem; }
+.no-results { text-align:center; padding:32px 20px; color:var(--muted); font-weight:700; font-size:.9rem; }
+.no-results .nr-icon { font-size:2rem; margin-bottom:8px; }
+mark { background:#FFF3CD; border-radius:3px; padding:0 2px; font-style:normal; }
+
+/* ══════════════════════════════════════
    LOADING / ERROR
 ══════════════════════════════════════ */
 .spin { animation: spin 1s linear infinite; display:inline-block; }
@@ -430,15 +459,7 @@ function renderKids(rows){
       </div>
     </div>`).join('');
 
-  const tRows=kids.map(c=>`
-    <tr>
-      <td><strong>${c.name}</strong></td>
-      <td><span class="chip" style="background:${gradeColor(c.grade)}">${c.grade||'—'}</span></td>
-      <td><span class="${c.gender.toLowerCase()==='male'?'chip-m':'chip-f'}">${c.gender}</span></td>
-      <td>${c.tshirt||'—'}</td>
-      <td>${c.allergies||'None'}</td>
-      <td style="color:var(--muted);font-size:.78rem">${c.parent}</td>
-    </tr>`).join('');
+  const tRows=kids.map(c=>buildKidsRow(c,'')).join('');
 
   document.getElementById('k-content').innerHTML=`
     <div class="grid2">
@@ -455,13 +476,74 @@ function renderKids(rows){
     </div>
     <div class="card span2">
       <div class="card-title" style="margin-bottom:14px">🧒 All Registered Children</div>
+      <div class="search-bar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" id="k-search" type="text" placeholder="Search by child or parent name…" oninput="filterKidsTable(this.value)">
+          <button class="btn-clear" id="k-clear" onclick="clearKidsSearch()" title="Clear search">✕</button>
+        </div>
+        <div class="search-count" id="k-count"><strong>${total}</strong> of ${total} children</div>
+      </div>
       <div class="tbl-wrap">
-        <table class="tbl">
+        <table class="tbl" id="k-table">
           <thead><tr><th>Name</th><th>Grade</th><th>Gender</th><th>T-Shirt</th><th>Allergies</th><th>Parent</th></tr></thead>
-          <tbody>${tRows}</tbody>
+          <tbody id="k-tbody">${tRows}</tbody>
         </table>
+        <div class="no-results" id="k-no-results" style="display:none">
+          <div class="nr-icon">🔎</div>
+          <div>No children found matching your search</div>
+        </div>
       </div>
     </div>`;
+  // store kids globally for search
+  window._allKids = kids;
+}
+
+function buildKidsRow(c, query='') {
+  const hl = (str) => {
+    if (!query || !str) return str || '';
+    const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return str.replace(re, '<mark>$1</mark>');
+  };
+  return `<tr>
+    <td><strong>${hl(c.name)}</strong></td>
+    <td><span class="chip" style="background:${gradeColor(c.grade)}">${c.grade||'—'}</span></td>
+    <td><span class="${c.gender.toLowerCase()==='male'?'chip-m':'chip-f'}">${c.gender}</span></td>
+    <td>${c.tshirt||'—'}</td>
+    <td>${c.allergies||'None'}</td>
+    <td style="color:var(--muted);font-size:.78rem">${hl(c.parent)}</td>
+  </tr>`;
+}
+
+function filterKidsTable(query) {
+  const kids = window._allKids || [];
+  const q = query.trim().toLowerCase();
+  const clearBtn = document.getElementById('k-clear');
+  const countEl  = document.getElementById('k-count');
+  const tbody    = document.getElementById('k-tbody');
+  const noRes    = document.getElementById('k-no-results');
+  const table    = document.getElementById('k-table');
+
+  if (clearBtn) clearBtn.classList.toggle('vis', q.length > 0);
+
+  const filtered = q
+    ? kids.filter(c => c.name.toLowerCase().includes(q) || c.parent.toLowerCase().includes(q))
+    : kids;
+
+  if (tbody) tbody.innerHTML = filtered.map(c => buildKidsRow(c, q)).join('');
+
+  if (countEl) countEl.innerHTML = `<strong>${filtered.length}</strong> of ${kids.length} children`;
+
+  if (noRes && table) {
+    noRes.style.display  = filtered.length === 0 ? 'block' : 'none';
+    table.style.display  = filtered.length === 0 ? 'none'  : '';
+  }
+}
+
+function clearKidsSearch() {
+  const inp = document.getElementById('k-search');
+  if (inp) { inp.value = ''; inp.focus(); }
+  filterKidsTable('');
 }
 
 async function loadKids(){
