@@ -57,15 +57,6 @@ function buildKidsRow(c, query = '') {
   </tr>`;
 }
 
-/* ── Toggle the All Children accordion ── */
-function toggleKidsTable() {
-  const body = document.getElementById('kids-acc-body');
-  const chev = document.getElementById('kids-acc-chev');
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
-  chev.classList.toggle('open', !isOpen);
-}
-
 function renderKids(rows) {
   const kids  = extractChildren(rows);
   const total = kids.length;
@@ -88,16 +79,6 @@ function renderKids(rows) {
       <div class="bar-n">${n}</div>
     </div>`).join('');
 
-  const famMap = {};
-  kids.forEach(c => { if (!famMap[c.parent]) famMap[c.parent] = { parent:c.parent, church:c.church, count:0 }; famMap[c.parent].count++; });
-  const famCards = Object.values(famMap).sort((a, b) => b.count - a.count).map(f => `
-    <div class="person-card">
-      <div class="fam-row">
-        <div><div class="fam-name">👨‍👩‍👧 ${f.parent}</div><div class="fam-sub">⛪ ${f.church}</div></div>
-        <div class="fam-count">${f.count} child${f.count>1?'ren':''}</div>
-      </div>
-    </div>`).join('');
-
   const tRows = kids.map(c => buildKidsRow(c, '')).join('');
 
   document.getElementById('k-content').innerHTML = `
@@ -109,11 +90,8 @@ function renderKids(rows) {
       <div class="card">
         <div class="card-title">⚧ Gender Breakdown</div>
         ${buildDonut(boys, girls, total)}
-        <div class="card-title" style="font-size:1rem;margin-top:18px;margin-bottom:0">👨‍👩‍👧 Families</div>
-        <div class="person-list">${famCards}</div>
       </div>
     </div>
-
     <div class="vol-accordion">
       <div class="vol-acc-header" onclick="toggleKidsTable()">
         <div class="vol-acc-left">
@@ -121,9 +99,9 @@ function renderKids(rows) {
           <span class="vol-acc-title">All Registered Children</span>
           <span class="tshirt-total-badge">${total} total</span>
         </div>
-        <span class="vol-acc-chev" id="kids-acc-chev">▼</span>
+        <span class="vol-acc-chev" id="k-acc-chev">▼</span>
       </div>
-      <div class="vol-acc-body" id="kids-acc-body">
+      <div class="vol-acc-body" id="k-acc-body">
         <div class="search-bar">
           <div class="search-wrap">
             <span class="search-icon">🔍</span>
@@ -172,6 +150,14 @@ function clearKidsSearch() {
   const inp = document.getElementById('k-search');
   if (inp) { inp.value = ''; inp.focus(); }
   filterKidsTable('');
+}
+
+function toggleKidsTable() {
+  const body = document.getElementById('k-acc-body');
+  const chev = document.getElementById('k-acc-chev');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
 }
 
 async function loadKids() {
