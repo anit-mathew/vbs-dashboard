@@ -631,26 +631,7 @@ function renderVols(vols){
   const shirtPills=Object.entries(shc).sort((a,b)=>b[1]-a[1]).map(([s,c],i)=>`
     <div class="pill"><div class="pill-dot" style="background:${SHIRT_C[i%SHIRT_C.length]}"></div>${s} <span class="pill-ct">×${c}</span></div>`).join('');
 
-  /* volunteer cards */
-  const volCards=vols.map(v=>{
-    const lv=v.level.toLowerCase();
-    const badge=lv.includes('lead')?`<span class="badge b-lead">⭐ Lead</span>`:lv.includes('assistant')?`<span class="badge b-asst">🤝 Assistant</span>`:`<span class="badge b-tbd">— TBD</span>`;
-    const dayTags=v.days.map(d=>{const n=d.includes('July 9')?'1':d.includes('July 10')?'2':d.includes('July 11')?'3':d;return `<span class="tag">Day ${n}</span>`;}).join('');
-    const roleTags=v.roles.map(r=>`<span class="tag">${r}</span>`).join('');
-    return `<div class="person-card">
-      <div class="vol-top">
-        <div><div class="vol-name">${v.name}</div><div class="vol-email">${v.email}</div></div>
-        ${badge}
-      </div>
-      <div class="tag-row">${dayTags||'<span class="tag" style="opacity:.5">—</span>'}</div>
-      <div class="tag-row">${roleTags||'<span class="tag" style="opacity:.5">No role</span>'}</div>
-      <div class="vol-foot">
-        ${v.age?`<span class="age-chip">${v.age}</span>`:''}
-        ${v.city?`<span class="vol-loc">📍 ${v.city}${v.state?', '+v.state:''}</span>`:''}
-        ${v.tshirt?`<span class="vol-loc">👕 ${v.tshirt}</span>`:''}
-      </div>
-    </div>`;
-  }).join('');
+  const volCards = vols.map(v => buildVolCard(v, '')).join('');
 
   document.getElementById('v-content').innerHTML=`
     <div class="grid2">
@@ -670,10 +651,90 @@ function renderVols(vols){
         ${roleBars||'<p style="color:var(--muted)">No role data</p>'}
       </div>
       <div class="card span2">
-        <div class="card-title">🙋 All Volunteers <span style="color:var(--muted);font-size:.85rem;font-family:Nunito,sans-serif;font-weight:600">(${total})</span></div>
-        <div class="person-list">${volCards}</div>
+        <div class="card-title" style="margin-bottom:14px">🙋 All Volunteers</div>
+        <div class="search-bar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" id="v-search" type="text" placeholder="Search by name, role, or church…" oninput="filterVolsList(this.value)">
+            <button class="btn-clear" id="v-clear" onclick="clearVolsSearch()" title="Clear search">✕</button>
+          </div>
+          <div class="search-count" id="v-count"><strong>${total}</strong> of ${total} volunteers</div>
+        </div>
+        <div id="v-list" class="person-list">${volCards}</div>
+        <div class="no-results" id="v-no-results" style="display:none">
+          <div class="nr-icon">🔎</div>
+          <div>No volunteers found matching your search</div>
+        </div>
       </div>
     </div>`;
+
+  window._allVols = vols;
+}
+
+function buildVolCard(v, query='') {
+  const hl = (str) => {
+    if (!query || !str) return str || '';
+    const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+    return str.replace(re, '<mark>$1</mark>');
+  };
+  const lv = v.level.toLowerCase();
+  const badge = lv.includes('lead')
+    ? `<span class="badge b-lead">⭐ Lead</span>`
+    : lv.includes('assistant')
+      ? `<span class="badge b-asst">🤝 Assistant</span>`
+      : `<span class="badge b-tbd">— TBD</span>`;
+  const dayTags = v.days.map(d => {
+    const n = d.includes('July 9')?'1':d.includes('July 10')?'2':d.includes('July 11')?'3':d;
+    return `<span class="tag">Day ${n}</span>`;
+  }).join('');
+  const roleTags = v.roles.map(r => `<span class="tag">${hl(r)}</span>`).join('');
+  return `<div class="person-card">
+    <div class="vol-top">
+      <div><div class="vol-name">${hl(v.name)}</div><div class="vol-email">${v.email}</div></div>
+      ${badge}
+    </div>
+    <div class="tag-row">${dayTags||'<span class="tag" style="opacity:.5">—</span>'}</div>
+    <div class="tag-row">${roleTags||'<span class="tag" style="opacity:.5">No role</span>'}</div>
+    <div class="vol-foot">
+      ${v.age?`<span class="age-chip">${v.age}</span>`:''}
+      ${v.church?`<span class="vol-loc">⛪ ${hl(v.church)}</span>`:''}
+      ${v.city?`<span class="vol-loc">📍 ${v.city}${v.state?', '+v.state:''}</span>`:''}
+      ${v.tshirt?`<span class="vol-loc">👕 ${v.tshirt}</span>`:''}
+    </div>
+  </div>`;
+}
+
+function filterVolsList(query) {
+  const vols = window._allVols || [];
+  const q = query.trim().toLowerCase();
+  const clearBtn = document.getElementById('v-clear');
+  const countEl  = document.getElementById('v-count');
+  const listEl   = document.getElementById('v-list');
+  const noRes    = document.getElementById('v-no-results');
+
+  if (clearBtn) clearBtn.classList.toggle('vis', q.length > 0);
+
+  const filtered = q
+    ? vols.filter(v =>
+        v.name.toLowerCase().includes(q) ||
+        v.roles.some(r => r.toLowerCase().includes(q)) ||
+        (v.church||'').toLowerCase().includes(q) ||
+        (v.email||'').toLowerCase().includes(q)
+      )
+    : vols;
+
+  if (listEl) listEl.innerHTML = filtered.map(v => buildVolCard(v, q)).join('');
+  if (countEl) countEl.innerHTML = `<strong>${filtered.length}</strong> of ${vols.length} volunteers`;
+  if (noRes && listEl) {
+    noRes.style.display = filtered.length === 0 ? 'block' : 'none';
+    listEl.style.display = filtered.length === 0 ? 'none' : '';
+  }
+}
+
+function clearVolsSearch() {
+  const inp = document.getElementById('v-search');
+  if (inp) { inp.value = ''; inp.focus(); }
+  filterVolsList('');
 }
 
 async function loadVols(){
