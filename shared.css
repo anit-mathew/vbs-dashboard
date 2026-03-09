@@ -291,39 +291,56 @@ mark { background:#FFF3CD; border-radius:3px; padding:0 2px; font-style:normal; 
 .servant-names  { font-family: 'Fredoka One', cursive; font-size: 1.05rem; color: var(--sun); }
 .servant-title  { font-size: .7rem; color: #A8C4E8; margin-top: 2px; font-weight: 600; font-style: italic; }
 
-/* Team grid */
+/* Team grid — 3 col desktop, 1 col mobile */
 .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
 
 .team-card {
   background: var(--card-bg); border-radius: 16px;
   border: 2px solid var(--border);
   cursor: pointer; transition: transform .18s, box-shadow .18s, border-color .18s;
-  overflow: hidden;
+  overflow: hidden; display: flex; flex-direction: column;
 }
 .team-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(26,39,68,.12); }
 .team-card.active { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(79,195,247,.2); }
 
 .team-card-header {
-  padding: 14px 16px 10px;
+  padding: 14px 16px 10px; flex: 1;
   display: flex; align-items: flex-start; gap: 10px;
 }
-.team-icon  { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
-.team-name  { font-family: 'Fredoka One', cursive; font-size: .95rem; color: var(--navy); line-height: 1.2; }
-.team-leads { font-size: .68rem; color: var(--muted); margin-top: 4px; font-weight: 700; }
+.team-icon  { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+.team-name  { font-family: 'Fredoka One', cursive; font-size: .92rem; color: var(--navy); line-height: 1.2; }
+.team-leads { font-size: .67rem; color: var(--muted); margin-top: 3px; font-weight: 700; }
 
-.team-footer {
-  border-top: 1px solid var(--border);
-  padding: 8px 16px;
-  display: flex; align-items: center; justify-content: space-between;
-}
 .team-count-pill {
   font-size: .68rem; font-weight: 800; padding: 2px 9px;
   border-radius: 99px; background: var(--page-bg);
-  border: 1px solid var(--border); color: var(--navy);
+  border: 1.5px solid; white-space: nowrap;
 }
 .team-view-btn {
   font-size: .68rem; font-weight: 800; color: var(--sky);
-  letter-spacing: .3px;
+  letter-spacing: .3px; white-space: nowrap;
+}
+
+/* Mobile: horizontal row cards — icon + info left, pill+bar right */
+@media(max-width: 600px) {
+  .team-grid { grid-template-columns: 1fr; gap: 10px; }
+
+  .team-card {
+    flex-direction: row; align-items: center;
+    border-radius: 14px; padding: 12px 14px; gap: 12px;
+  }
+  .team-card-header {
+    padding: 0; flex: 1; align-items: center; gap: 10px;
+  }
+  .team-icon { font-size: 1.6rem; margin-top: 0; }
+  .team-name { font-size: .88rem; }
+
+  /* right side: pill + bar stacked */
+  .team-card-right {
+    display: flex; flex-direction: column; align-items: flex-end;
+    gap: 6px; flex-shrink: 0; min-width: 80px;
+  }
+  .team-view-btn { display: none; } /* cleaner without it on mobile */
 }
 
 /* ── Team Modal Overlay ── */
@@ -418,16 +435,13 @@ mark { background:#FFF3CD; border-radius:3px; padding:0 2px; font-style:normal; 
 
 /* Responsive */
 @media(max-width: 860px) {
-  .team-grid { grid-template-columns: repeat(3, 1fr); }
-}
-@media(max-width: 640px) {
-  .team-grid { grid-template-columns: repeat(2, 1fr); }
   .team-modal { max-height: 92vh; border-radius: 18px; }
 }
-@media(max-width: 420px) {
-  .team-grid { grid-template-columns: repeat(2, 1fr); }
+@media(max-width: 600px) {
   .servant-banner { flex-direction: column; align-items: flex-start; }
   .team-member-grid { grid-template-columns: 1fr; }
   .team-modal-head { padding: 16px 16px 12px; }
   .team-modal-body { padding: 14px 16px 18px; }
+  .team-modal { border-radius: 16px 16px 0 0; align-self: flex-end; max-height: 80vh; }
+  .team-modal-overlay { align-items: flex-end; padding: 0; }
 }

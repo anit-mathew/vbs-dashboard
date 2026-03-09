@@ -266,7 +266,7 @@ function renderVols(vols) {
           leadsHtml +
         '</div>' +
       '</div>' +
-      '<div style="padding:0 16px 14px">' +
+      '<div class="team-card-right" style="padding:0 16px 14px">' +
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
           '<span class="team-count-pill" style="border-color:' + team.color + ';color:' + team.color + '">' + count + ' registered</span>' +
           '<span class="team-view-btn">View team ›</span>' +
