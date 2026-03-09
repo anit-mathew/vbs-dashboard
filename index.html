@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VBS 2026 — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- Shared styles (colours, layout, both tabs) -->
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<!-- ─── HEADER ─────────────────────────── -->
+<header class="site-header">
+  <div>
+    <div class="site-title">⛪ VBS 2026 Command Center</div>
+    <div class="site-sub">India Christian Assembly NJ · Live Registration &amp; Volunteer Monitor</div>
+  </div>
+  <div class="header-right">
+    <span class="ts" id="ts"></span>
+    <span class="live-badge">LIVE</span>
+    <button class="btn-refresh" onclick="refreshAll()">↻ Refresh</button>
+  </div>
+</header>
+
+<!-- ─── TAB BAR ────────────────────────── -->
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('kids',this)">🧒 Kids Registration</button>
+  <button class="tab-btn"        onclick="switchTab('vol',this)">🙋 Volunteers</button>
+</nav>
+
+<!-- ─── KIDS PANEL ─────────────────────── -->
+<div id="panel-kids" class="panel active">
+  <div class="page">
+    <div id="k-stats" class="stat-row">
+      <div class="loading-box" style="grid-column:1/-1"><span class="spin">⏳</span> Loading kids data…</div>
+    </div>
+    <div id="k-tshirt"></div>
+    <div id="k-content"></div>
+  </div>
+</div>
+
+<!-- ─── VOLUNTEER PANEL ────────────────── -->
+<div id="panel-vol" class="panel">
+  <div class="page">
+    <div id="v-stats" class="stat-row five">
+      <div class="loading-box" style="grid-column:1/-1"><span class="spin">⏳</span> Loading volunteer data…</div>
+    </div>
+    <div id="v-content"></div>
+  </div>
+</div>
+
+<!-- ─── TEAM MODAL (shared overlay, populated by volunteers.js) ── -->
+<div class="team-modal-overlay" id="team-modal-overlay" onclick="handleModalOverlayClick(event)">
+  <div class="team-modal" id="team-modal">
+    <div class="team-modal-head">
+      <div>
+        <div class="team-modal-title" id="team-modal-title"></div>
+        <div class="team-modal-meta" id="team-modal-meta"></div>
+      </div>
+      <button class="team-modal-close" onclick="closeTeamModal()" title="Close">✕</button>
+    </div>
+    <div class="team-modal-body" id="team-modal-body"></div>
+  </div>
+</div>
+
+<!-- ─── SCRIPTS (load order matters: shared → kids → volunteers) ── -->
+<script src="shared.js"></script>
+<script src="kids.js"></script>
+<script src="volunteers.js"></script>
+<script>
+  refreshAll();
+  setInterval(refreshAll, 120000);
+</script>
+
+</body>
+</html>
