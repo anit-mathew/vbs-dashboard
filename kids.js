@@ -57,6 +57,15 @@ function buildKidsRow(c, query = '') {
   </tr>`;
 }
 
+/* ── Toggle the All Children accordion ── */
+function toggleKidsTable() {
+  const body = document.getElementById('kids-acc-body');
+  const chev = document.getElementById('kids-acc-chev');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+}
+
 function renderKids(rows) {
   const kids  = extractChildren(rows);
   const total = kids.length;
@@ -104,24 +113,34 @@ function renderKids(rows) {
         <div class="person-list">${famCards}</div>
       </div>
     </div>
-    <div class="card span2">
-      <div class="card-title" style="margin-bottom:14px">🧒 All Registered Children</div>
-      <div class="search-bar">
-        <div class="search-wrap">
-          <span class="search-icon">🔍</span>
-          <input class="search-input" id="k-search" type="text" placeholder="Search by child or parent name…" oninput="filterKidsTable(this.value)">
-          <button class="btn-clear" id="k-clear" onclick="clearKidsSearch()" title="Clear search">✕</button>
+
+    <div class="vol-accordion">
+      <div class="vol-acc-header" onclick="toggleKidsTable()">
+        <div class="vol-acc-left">
+          <span style="font-size:1.2rem">🧒</span>
+          <span class="vol-acc-title">All Registered Children</span>
+          <span class="tshirt-total-badge">${total} total</span>
         </div>
-        <div class="search-count" id="k-count"><strong>${total}</strong> of ${total} children</div>
+        <span class="vol-acc-chev" id="kids-acc-chev">▼</span>
       </div>
-      <div class="tbl-wrap">
-        <table class="tbl" id="k-table">
-          <thead><tr><th>Name</th><th>Grade</th><th>Gender</th><th>T-Shirt</th><th>Allergies</th><th>Parent</th></tr></thead>
-          <tbody id="k-tbody">${tRows}</tbody>
-        </table>
-        <div class="no-results" id="k-no-results" style="display:none">
-          <div class="nr-icon">🔎</div>
-          <div>No children found matching your search</div>
+      <div class="vol-acc-body" id="kids-acc-body">
+        <div class="search-bar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" id="k-search" type="text" placeholder="Search by child or parent name…" oninput="filterKidsTable(this.value)">
+            <button class="btn-clear" id="k-clear" onclick="clearKidsSearch()" title="Clear search">✕</button>
+          </div>
+          <div class="search-count" id="k-count"><strong>${total}</strong> of ${total} children</div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl" id="k-table">
+            <thead><tr><th>Name</th><th>Grade</th><th>Gender</th><th>T-Shirt</th><th>Allergies</th><th>Parent</th></tr></thead>
+            <tbody id="k-tbody">${tRows}</tbody>
+          </table>
+          <div class="no-results" id="k-no-results" style="display:none">
+            <div class="nr-icon">🔎</div>
+            <div>No children found matching your search</div>
+          </div>
         </div>
       </div>
     </div>`;
