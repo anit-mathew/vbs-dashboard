@@ -15,7 +15,7 @@ const DAY_INFO = [
    teams, leaders, icons, or role keywords
 ══════════════════════════════════════ */
 var SERVANT_LEADERS = ['Feba Thomas', 'Anit Mathew'];
-var SERVANT_TITLE   = 'Servants of All · VBS 2026';
+var SERVANT_TITLE   = '"Got questions, suggestions, or a 'brilliant' 11pm idea? We don't have all the answers — but we'll pretend we do. Reach out — we exist to serve."';
 
 var TEAMS = [
   { id:'activities',   icon:'🏃', name:'Activities & Games',      sub:'3 Age Groups', leads:['Roshan','Stephanie'],  roleKey:['Recreation','Activities','Games'],          color:'#26C6DA' },
