@@ -293,7 +293,7 @@ function renderVols(vols) {
         '<div class="pill-section-lbl">Age Range</div><div class="pill-row">' + (agePills||'<span style="color:var(--muted)">No data</span>') + '</div>' +
         '<div class="pill-section-lbl">T-Shirt Sizes</div><div class="pill-row">' + (shirtPills||'<span style="color:var(--muted)">No data</span>') + '</div>' +
       '</div>' +
-      '<div class="card span2"><div class="card-title">🎯 Volunteer Roles Breakdown</div>' + (roleBars||'<p style="color:var(--muted)">No role data</p>') + '</div>' +
+     '<div class="card span2"><div class="card-title">🎯 Volunteer Roles Breakdown</div>' + (roleBars||'<p style="color:var(--muted)">No role data</p>') + '<p style="font-size:.7rem;color:var(--muted);margin-top:14px;font-weight:700">💡 Counts based on each volunteer\'s selected role. Decoration team in Teams &amp; Roster shows all 8 volunteers — the whole team helps on decoration day.</p></div>' +
     '</div>' +
     servantBanner +
     '<div class="card" style="margin-bottom:18px">' +
