@@ -18,13 +18,17 @@ var SERVANT_LEADERS = ['Feba Thomas', 'Anit Mathew'];
 var SERVANT_TITLE   = 'Servants of All · VBS 2026';
 
 var TEAMS = [
-  { id:'activities',   icon:'🏃', name:'Activities & Games', sub:'3 Age Groups',     leads:['Roshan','Stephanie'],   roleKey:['Recreation','Activities','Games'],    color:'#26C6DA' },
-  { id:'decoration',   icon:'🎨', name:'Decoration',          sub:'Whole-team effort', leads:['Jasmin','Janita'],      roleKey:['Decoration'],                         color:'#FF7043', wholeTeam:true },
-  { id:'crafts',       icon:'✂️', name:'Crafts',              sub:'',                  leads:['Jessica'],              roleKey:['Arts and Crafts','Crafts'],            color:'#9C6FDE' },
-  { id:'worship',      icon:'🎵', name:'VBS Songs & Worship',  sub:'',                  leads:['Hope','Jayden'],        roleKey:['Worship Team','Praise','Worship'],     color:'#F48FB1' },
-  { id:'registration', icon:'📋', name:'Registration',         sub:'',                  leads:['Sarah','Maria'],        roleKey:['Registration'],                       color:'#66BB6A' },
-  { id:'media',        icon:'🎥', name:'Media',                sub:'',                  leads:['Jason'],               roleKey:['Media'],                              color:'#42A5F5' },
-  { id:'curriculum',   icon:'📖', name:'Lesson Plan & Curriculum', sub:'',            leads:['Sheba Samuel','Feba'],  roleKey:['Bible Lessons','Curriculum','Lesson'], color:'#FFB300' }
+  { id:'activities',   icon:'🏃', name:'Activities & Games',      sub:'3 Age Groups', leads:['Roshan','Stephanie'],  roleKey:['Recreation','Activities','Games'],          color:'#26C6DA' },
+  { id:'decoration',   icon:'🎨', name:'Decoration',              sub:'',             leads:['Jasmin','Janita'],     roleKey:['Decoration'],                              color:'#FF7043' },
+  { id:'crafts',       icon:'✂️', name:'Crafts',                  sub:'',             leads:['Jessica'],             roleKey:['Arts and Crafts','Crafts'],                color:'#9C6FDE' },
+  { id:'worship',      icon:'🎵', name:'VBS Songs & Worship',     sub:'',             leads:['Hope','Jayden'],       roleKey:['Worship Team','Praise','Worship'],          color:'#F48FB1' },
+  { id:'registration', icon:'📋', name:'Registration',            sub:'',             leads:['Sarah','Maria'],       roleKey:['Registration'],                            color:'#66BB6A' },
+  { id:'media',        icon:'🎥', name:'Media',                   sub:'',             leads:['Jason'],              roleKey:['Media'],                                   color:'#42A5F5' },
+  { id:'curriculum',   icon:'📖', name:'Lesson Plan & Curriculum',sub:'',             leads:['Sheba Samuel','Feba'],roleKey:['Bible Lessons','Curriculum','Lesson'],      color:'#FFB300' },
+  { id:'food',         icon:'🍽️', name:'Food',                    sub:'',             leads:['Pr Kevin','Br Anit'],  roleKey:['Food'],                                    color:'#FF9800' },
+  { id:'medical',      icon:'🏥', name:'Medical Team',            sub:'',             leads:['Janita'],              roleKey:['Medical Team','Medical'],                  color:'#F06292' },
+  { id:'crew',         icon:'🧢', name:'Crew Leader',             sub:'',             leads:[],                     roleKey:['Crew Leader'],                             color:'#EC407A' },
+  { id:'facility',     icon:'🔧', name:'Facility Management',     sub:'',             leads:[],                     roleKey:['Facility Management','Facility Mangement'],color:'#8D6E63' }
 ];
 
 /* ── Helpers ── */
@@ -242,21 +246,34 @@ function renderVols(vols) {
       '</div>' +
     '</div>';
 
-  /* team cards — clean grid, no drawers, click opens modal */
+  /* team cards — pill + mini bar, no separate roles breakdown */
+  var maxTeamCount = Math.max.apply(null, TEAMS.map(function(team) {
+    return vols.filter(function(v){ return volMatchesTeam(v, team); }).length;
+  }).concat([1]));
+
   var teamCards = TEAMS.map(function(team) {
     var count = vols.filter(function(v){ return volMatchesTeam(v, team); }).length;
+    var pct   = Math.round(count / maxTeamCount * 100);
+    var leadsHtml = team.leads.filter(Boolean).length
+      ? '<div class="team-leads">👑 ' + team.leads.join(' &amp; ') + '</div>'
+      : '';
     return '<div class="team-card" id="card-' + team.id + '" onclick="openTeamModal(\'' + team.id + '\')">' +
       '<div class="team-card-header">' +
         '<div class="team-icon">' + team.icon + '</div>' +
-        '<div>' +
+        '<div style="flex:1;min-width:0">' +
           '<div class="team-name">' + team.name + '</div>' +
           (team.sub ? '<div style="font-size:.65rem;color:var(--muted);font-weight:700;margin-top:1px">' + team.sub + '</div>' : '') +
-          '<div class="team-leads">👑 ' + team.leads.join(' &amp; ') + '</div>' +
+          leadsHtml +
         '</div>' +
       '</div>' +
-      '<div class="team-footer">' +
-        '<span class="team-count-pill" style="border-color:' + team.color + ';color:' + team.color + '">' + count + ' registered</span>' +
-        '<span class="team-view-btn">View team ›</span>' +
+      '<div style="padding:0 16px 14px">' +
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
+          '<span class="team-count-pill" style="border-color:' + team.color + ';color:' + team.color + '">' + count + ' registered</span>' +
+          '<span class="team-view-btn">View team ›</span>' +
+        '</div>' +
+        '<div style="background:#EEF3FB;border-radius:30px;height:8px;overflow:hidden">' +
+          '<div style="height:100%;border-radius:30px;background:' + team.color + ';width:' + pct + '%;transition:width 1s ease"></div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -293,7 +310,6 @@ function renderVols(vols) {
         '<div class="pill-section-lbl">Age Range</div><div class="pill-row">' + (agePills||'<span style="color:var(--muted)">No data</span>') + '</div>' +
         '<div class="pill-section-lbl">T-Shirt Sizes</div><div class="pill-row">' + (shirtPills||'<span style="color:var(--muted)">No data</span>') + '</div>' +
       '</div>' +
-     '<div class="card span2"><div class="card-title">🎯 Volunteer Roles Breakdown</div>' + (roleBars||'<p style="color:var(--muted)">No role data</p>') + '<p style="font-size:.7rem;color:var(--muted);margin-top:14px;font-weight:700">💡 Counts based on each volunteer\'s selected role. Decoration team in Teams &amp; Roster shows all 8 volunteers — the whole team helps on decoration day.</p></div>' +
     '</div>' +
     servantBanner +
     '<div class="card" style="margin-bottom:18px">' +
