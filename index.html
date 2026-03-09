@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VBS 2026 — Registration Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sun: #FFD84D;
+    --sky: #4FC3F7;
+    --grass: #66BB6A;
+    --coral: #FF7043;
+    --purple: #9C6FDE;
+    --navy: #1A2744;
+    --card-bg: #FFFFFF;
+    --page-bg: #F0F7FF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--page-bg);
+    min-height: 100vh;
+    color: var(--navy);
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, #2A3F7A 100%);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '⛪🌟✝️🎉🌈';
+    position: absolute;
+    right: 40px;
+    font-size: 28px;
+    letter-spacing: 10px;
+    opacity: 0.25;
+  }
+
+  header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.2rem;
+    color: var(--sun);
+    letter-spacing: 1px;
+  }
+
+  header p { color: #A8C4E8; font-size: 0.95rem; margin-top: 2px; }
+
+  .badge {
+    background: var(--coral);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 24px 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(26,39,68,0.08);
+    border-top: 5px solid var(--sky);
+    transition: transform 0.2s;
+  }
+
+  .stat-card:hover { transform: translateY(-4px); }
+  .stat-card:nth-child(2) { border-color: var(--coral); }
+  .stat-card:nth-child(3) { border-color: var(--grass); }
+  .stat-card:nth-child(4) { border-color: var(--purple); }
+
+  .stat-number {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.8rem;
+    line-height: 1;
+    color: var(--navy);
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #7A8BAD;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 6px;
+  }
+
+  .section-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    color: var(--navy);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(26,39,68,0.08);
+  }
+
+  .grade-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .grade-label { font-weight: 700; font-size: 0.85rem; width: 80px; color: var(--navy); flex-shrink: 0; }
+  .bar-wrap { flex: 1; background: #EEF3FB; border-radius: 30px; height: 28px; overflow: hidden; }
+  .bar-fill {
+    height: 100%;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: white;
+    min-width: 36px;
+  }
+  .grade-count { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: var(--navy); width: 24px; text-align: right; }
+
+  .children-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .children-table thead tr { background: var(--navy); color: white; }
+  .children-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .children-table th:first-child { border-radius: 10px 0 0 10px; }
+  .children-table th:last-child { border-radius: 0 10px 10px 0; }
+  .children-table tbody tr { border-bottom: 1px solid #EEF3FB; transition: background 0.15s; }
+  .children-table tbody tr:hover { background: #F5F9FF; }
+  .children-table td { padding: 10px 14px; vertical-align: middle; }
+
+  .grade-chip { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; color: white; }
+  .male { background: #DBEAFE; color: #1E40AF; display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+  .female { background: #FCE7F3; color: #9D174D; display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+
+  .family-list { display: flex; flex-direction: column; gap: 14px; }
+  .family-card { border: 2px solid #EEF3FB; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .family-name { font-weight: 800; font-size: 0.95rem; }
+  .family-church { font-size: 0.78rem; color: #7A8BAD; margin-top: 2px; }
+  .family-count { background: var(--navy); color: var(--sun); font-family: 'Fredoka One', cursive; font-size: 1.1rem; padding: 6px 14px; border-radius: 30px; white-space: nowrap; }
+
+  .refresh-btn {
+    background: var(--sun);
+    border: none;
+    color: var(--navy);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 8px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .refresh-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(255,216,77,0.5); }
+
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  #last-updated { color: #A8C4E8; font-size: 0.78rem; }
+
+  .loading { text-align: center; padding: 40px; color: #7A8BAD; font-weight: 700; font-size: 1rem; }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg { background: #FFF0ED; border: 2px solid #FF7043; border-radius: 14px; padding: 20px; color: var(--coral); font-weight: 700; text-align: center; }
+
+  .donut-wrap { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 10px 0; }
+  .legend { display: flex; flex-direction: column; gap: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
+
+  @media(max-width:600px) {
+    header { padding: 20px; }
+    header h1 { font-size: 1.5rem; }
+    .container { padding: 20px 14px; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⛪ VBS 2026 Dashboard</h1>
+    <p>Vacation Bible School · Registration Monitor</p>
+  </div>
+  <div class="header-right">
+    <span id="last-updated"></span>
+    <span class="badge">Live</span>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="container">
+  <div id="stats-row" class="stats-row">
+    <div class="loading"><span class="spin">⏳</span> Loading data…</div>
+  </div>
+  <div id="main-content"></div>
+</div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI-vHJhZBtLtBBn94Eq_0beJYuNhywqgP4dpgpd0sjPfvPzgnLq8NtAAQvYTmN_0OBFpb7X1q-G20Y/pub?output=csv";
+
+const GRADE_COLORS = {
+  'Pre': '#FF7043','K': '#FF9800','1st': '#FDD835','2nd': '#66BB6A',
+  '3rd': '#26C6DA','4th': '#42A5F5','5th': '#7E57C2','6th': '#EC407A',
+  '7th': '#8D6E63','8th': '#546E7A','default': '#9C6FDE'
+};
+
+function gradeColor(g) {
+  for (const k of Object.keys(GRADE_COLORS)) {
+    if (k !== 'default' && g && g.includes(k)) return GRADE_COLORS[k];
+  }
+  return GRADE_COLORS.default;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(line => {
+    const vals = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; continue; }
+      if (line[i] === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += line[i];
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  });
+}
+
+function extractChildren(rows) {
+  const children = [];
+  rows.forEach(row => {
+    const parent = row["Parent's Full Name"] || '';
+    const church = row["Church Name"] || '';
+    if (row["Child #1 Name"] && row["Child #1 Name"].trim()) {
+      children.push({ name: row["Child #1 Name"], gender: row["Gender"] || '', grade: row["Grade in Spetmber"] || '', tshirt: row["T Shirt Size"] || '', allergies: row["Allergies"] || 'None', parent, church });
+    }
+    if (row["Child #2 Name"] && row["Child #2 Name"].trim()) {
+      children.push({ name: row["Child #2 Name"], gender: row["Gender (1)"] || '', grade: row["Grade in Spetmber (1)"] || '', tshirt: row["T Shirt Size (1)"] || '', allergies: row["Allergies (1)"] || 'None', parent, church });
+    }
+    if (row["Child #3 Name"] && row["Child #3 Name"].trim()) {
+      children.push({ name: row["Child #3 Name"], gender: row["Gender (2)"] || '', grade: row["Grade in Spetmber (2)"] || '', tshirt: row["T Shirt Size (2)"] || '', allergies: row["Allergies (2)"] || 'None', parent, church });
+    }
+  });
+  return children.filter(c => c.name.trim());
+}
+
+function buildDonut(boys, girls, total) {
+  if (!total) return '';
+  const r = 60, cx = 70, cy = 70, circ = 2 * Math.PI * r;
+  const boyDash = (boys/total) * circ;
+  const girlDash = (girls/total) * circ;
+  return `<div class="donut-wrap">
+    <svg width="140" height="140" viewBox="0 0 140 140">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#EEF3FB" stroke-width="22"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#4FC3F7" stroke-width="22"
+        stroke-dasharray="${boyDash} ${circ}" stroke-dashoffset="${circ/4}" stroke-linecap="round"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#F48FB1" stroke-width="22"
+        stroke-dasharray="${girlDash} ${circ}" stroke-dashoffset="${circ/4 - boyDash}" stroke-linecap="round"/>
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
+        font-family="Fredoka One,cursive" font-size="22" fill="#1A2744">${total}</text>
+      <text x="${cx}" y="${cy+20}" text-anchor="middle" dominant-baseline="middle"
+        font-family="Nunito,sans-serif" font-size="9" fill="#7A8BAD" font-weight="700">KIDS</text>
+    </svg>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4FC3F7"></div>Boys — ${boys}</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F48FB1"></div>Girls — ${girls}</div>
+    </div>
+  </div>`;
+}
+
+function render(rows) {
+  const children = extractChildren(rows);
+  const total = children.length;
+  const boys = children.filter(c => c.gender.toLowerCase() === 'male').length;
+  const girls = children.filter(c => c.gender.toLowerCase() === 'female').length;
+
+  const gradeCounts = {};
+  children.forEach(c => { const g = c.grade.trim() || 'Unknown'; gradeCounts[g] = (gradeCounts[g]||0)+1; });
+  const maxGrade = Math.max(...Object.values(gradeCounts), 1);
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-number">${total}</div><div class="stat-label">Total Children</div></div>
+    <div class="stat-card"><div class="stat-number">${rows.length}</div><div class="stat-label">Families</div></div>
+    <div class="stat-card"><div class="stat-number">${boys}</div><div class="stat-label">Boys</div></div>
+    <div class="stat-card"><div class="stat-number">${girls}</div><div class="stat-label">Girls</div></div>
+  `;
+
+  const gradeBars = Object.entries(gradeCounts).sort((a,b)=>b[1]-a[1]).map(([g,cnt])=>`
+    <div class="grade-row">
+      <div class="grade-label">${g}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${cnt/maxGrade*100}%;background:${gradeColor(g)}">${cnt} kid${cnt>1?'s':''}</div></div>
+      <div class="grade-count">${cnt}</div>
+    </div>`).join('');
+
+  const familyMap = {};
+  children.forEach(c => {
+    const key = c.parent;
+    if (!familyMap[key]) familyMap[key] = { parent: c.parent, church: c.church, count: 0 };
+    familyMap[key].count++;
+  });
+  const familyCards = Object.values(familyMap).sort((a,b)=>b.count-a.count).map(f=>`
+    <div class="family-card">
+      <div><div class="family-name">👨‍👩‍👧 ${f.parent}</div><div class="family-church">⛪ ${f.church}</div></div>
+      <div class="family-count">${f.count} child${f.count>1?'ren':''}</div>
+    </div>`).join('');
+
+  const tableRows = children.map(c=>`
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td><span class="grade-chip" style="background:${gradeColor(c.grade)}">${c.grade||'—'}</span></td>
+      <td><span class="${c.gender.toLowerCase()==='male'?'male':'female'}">${c.gender}</span></td>
+      <td>${c.tshirt||'—'}</td>
+      <td>${c.allergies||'None'}</td>
+      <td style="color:#7A8BAD;font-size:0.82rem">${c.parent}</td>
+    </tr>`).join('');
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">📊 Kids by Grade</div>
+        ${gradeBars||'<p style="color:#7A8BAD">No grade data</p>'}
+      </div>
+      <div class="card">
+        <div class="section-title">⚧ Gender Breakdown</div>
+        ${buildDonut(boys,girls,total)}
+        <div style="margin-top:20px">
+          <div class="section-title" style="font-size:1.1rem;margin-bottom:12px">👨‍👩‍👧 Families</div>
+          <div class="family-list">${familyCards}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:18px">🧒 All Registered Children</div>
+      <div style="overflow-x:auto">
+        <table class="children-table">
+          <thead><tr><th>Name</th><th>Grade</th><th>Gender</th><th>T-Shirt</th><th>Allergies</th><th>Parent</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+async function loadData() {
+  document.getElementById('stats-row').innerHTML = `<div class="loading"><span class="spin">⏳</span> Loading…</div>`;
+  document.getElementById('main-content').innerHTML = '';
+  try {
+    const res = await fetch(CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('Network error ' + res.status);
+    const text = await res.text();
+    render(parseCSV(text));
+  } catch(e) {
+    document.getElementById('stats-row').innerHTML = `<div class="error-msg">⚠️ Could not load data. Make sure the sheet is published.<br><small>${e.message}</small></div>`;
+  }
+}
+
+loadData();
+setInterval(loadData, 120000);
+</script>
+</body>
+</html>
