@@ -12,7 +12,7 @@ const DAY_INFO = [
    TEAM DEFINITIONS — edit here
 ══════════════════════════════════════ */
 const SERVANT_LEADERS = ['Feba Thomas', 'Anit Mathew'];
-const SERVANT_TITLE   = "Got questions, suggestions, or a 'brilliant' 11pm idea? We don't have all the answers — but we'll pretend we do. Reach out — we exist to serve.";
+const SERVANT_TITLE   = "Got questions, chaos, or a 'brilliant' 11pm idea? We don't have all the answers — but we'll pretend we do. Come find us.";
 
 const TEAMS = [
   { id:'activities',   icon:'🏃',  name:'Activities & Games',      sub:'3 Age Groups', leads:['Roshan','Stephanie'],  roleKey:['Recreation','Activities','Games'],           color:'#26C6DA' },
@@ -51,6 +51,42 @@ function mapVol(row) {
   }
   var name = get("what's your name", "name");
   if (!name) return null;
+
+  /* grab timestamp */
+  var tsRaw = '';
+  var tsKey = Object.keys(row).find(function(h) {
+    var k = h.trim().toLowerCase();
+    return k === 'submission time' || k === 'timestamp' || k.includes('submission time') || k.includes('timestamp');
+  }) || Object.keys(row).find(function(h) {
+    var k = h.trim().toLowerCase();
+    return k.includes('time') && !k.includes('id');
+  });
+  
+  if (tsKey) {
+    tsRaw = row[tsKey] || '';
+  } else {
+    tsRaw = row[Object.keys(row)[0]] || '';
+  }
+
+  var ts = 0;
+  if (tsRaw) {
+    // 1. Try ISO normalization (2026-03-09 17:03:18 -> 2026-03-09T17:03:18)
+    var normalized = tsRaw.trim().replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})/, '$1T$2');
+    var parsed = new Date(normalized);
+
+    // 2. Fallback: If browser fails strict ISO, try simple parsing
+    if (isNaN(parsed.getTime())) {
+      parsed = new Date(tsRaw.trim());
+    }
+
+    // 3. Last Resort: Force M/D/YYYY to YYYY-MM-DD
+    if (isNaN(parsed.getTime())) {
+      parsed = new Date(tsRaw.replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2').replace(' ', 'T'));
+    }
+    
+    ts = isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+  }
+
   return {
     name:   name,
     email:  get('email'),
@@ -63,8 +99,18 @@ function mapVol(row) {
               .split(',').map(function(d){ return d.trim(); }).filter(Boolean),
     roles:  get('type of volunteer', 'volunteer work')
               .split(',').map(function(r){ return r.trim(); }).filter(Boolean),
-    level:  get('lead or an assistant', 'lead or assistant', 'lead')
+    level:  get('lead or an assistant', 'lead or assistant', 'lead'),
+    ts:     ts
   };
+}
+
+/* ── Format timestamp as YYYY-MM-DD HH:MM:SS ── */
+function formatTs(ts) {
+  if (!ts) return '';
+  var d   = new Date(ts);
+  var pad = function(n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+    ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
 }
 
 /* ── Volunteer card (All Volunteers accordion) ── */
@@ -83,6 +129,11 @@ function buildVolCard(v, query) {
     : lv.includes('assistant')
       ? '<span class="badge b-asst">🤝 Assistant</span>'
       : '<span class="badge b-tbd">— TBD</span>';
+
+  var isNew    = v.ts && (Date.now() - v.ts) < 86400000;
+  var newBadge = isNew ? '<span class="badge b-new">🆕 New</span>' : '';
+  var tsLabel  = v.ts ? '<span class="vol-ts">🕐 ' + formatTs(v.ts) + '</span>' : '';
+
   var dayTags = v.days.map(function(d) {
     var n = d.includes('July 9') ? '1' : d.includes('July 10') ? '2' : d.includes('July 11') ? '3' : d;
     return '<span class="tag">Day ' + n + '</span>';
@@ -90,10 +141,11 @@ function buildVolCard(v, query) {
   var roleTags = v.roles.map(function(r) {
     return '<span class="tag">' + hl(r) + '</span>';
   }).join('');
-  return '<div class="person-card">' +
+  return '<div class="person-card' + (isNew ? ' person-card-new' : '') + '">' +
     '<div class="vol-top"><div>' +
-      '<div class="vol-name">' + hl(v.name) + '</div>' +
+      '<div class="vol-name">' + hl(v.name) + ' ' + newBadge + '</div>' +
       '<div class="vol-email">' + v.email + '</div>' +
+      (tsLabel ? '<div>' + tsLabel + '</div>' : '') +
     '</div>' + badge + '</div>' +
     '<div class="tag-row">' + (dayTags  || '<span class="tag" style="opacity:.5">—</span>') + '</div>' +
     '<div class="tag-row">' + (roleTags || '<span class="tag" style="opacity:.5">No role</span>') + '</div>' +
@@ -185,6 +237,9 @@ function toggleAllVols() {
    MAIN RENDER
 ══════════════════════════════════════ */
 function renderVols(vols) {
+  /* sort newest first — this relies on the ts being parsed correctly in mapVol */
+  vols = vols.slice().sort(function(a, b) { return b.ts - a.ts; });
+
   var total   = vols.length;
   var leads   = vols.filter(function(v){ return v.level.toLowerCase().includes('lead'); }).length;
   var assists = vols.filter(function(v){ return v.level.toLowerCase().includes('assistant'); }).length;
@@ -238,7 +293,7 @@ function renderVols(vols) {
       '</div>' +
     '</div>';
 
-  /* team cards with pill + mini bar */
+  /* team cards */
   var maxTeamCount = Math.max.apply(null,
     TEAMS.map(function(t){ return vols.filter(function(v){ return volMatchesTeam(v,t); }).length; }).concat([1])
   );
