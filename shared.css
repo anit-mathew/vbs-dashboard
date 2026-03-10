@@ -150,11 +150,15 @@ body {
 .vol-top   { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
 .vol-name  { font-weight:800; font-size:.9rem; color:var(--navy); }
 .vol-email { font-size:.72rem; color:var(--muted); margin-top:2px; }
+.vol-ts    { font-size:.66rem; color:#94a3b8; margin-top:2px; font-family: monospace; }
 
 .badge   { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:99px; font-size:.68rem; font-weight:800; flex-shrink:0; }
 .b-lead  { background:rgba(255,179,0,.12);  color:#b45309; border:1px solid rgba(255,179,0,.35); }
 .b-asst  { background:rgba(79,195,247,.12); color:#0369a1; border:1px solid rgba(79,195,247,.35); }
 .b-tbd   { background:rgba(156,111,222,.12);color:var(--purple); border:1px solid rgba(156,111,222,.3); }
+.b-new   { background:rgba(74,222,128,.15); color:#15803d; border:1px solid rgba(74,222,128,.4); }
+
+.person-card-new { border-color: rgba(74,222,128,.5); background: #F0FDF4; }
 
 .tag-row { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
 .tag     { display:inline-block; background:#F0F7FF; border:1px solid var(--border); border-radius:8px; padding:2px 8px; font-size:.68rem; font-weight:700; color:var(--navy); }
