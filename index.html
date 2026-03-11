@@ -27,6 +27,7 @@
 <nav class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('kids',this)">🧒 Kids Registration</button>
   <button class="tab-btn"        onclick="switchTab('vol',this)">🙋 Volunteers</button>
+  <button class="tab-btn"        onclick="switchTab('checkinout',this)">🏫 Check-In / Out</button>
 </nav>
 
 <!-- ─── KIDS PANEL ─────────────────────── -->
@@ -47,6 +48,165 @@
       <div class="loading-box" style="grid-column:1/-1"><span class="spin">⏳</span> Loading volunteer data…</div>
     </div>
     <div id="v-content"></div>
+  </div>
+</div>
+
+<!-- ─── CHECK-IN / OUT PANEL ─────────────────── -->
+<div id="panel-checkinout" class="panel">
+  <style>
+    .portal-wrap {
+      min-height: 60vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 48px 24px;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(249,115,22,.10) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 110%, rgba(245,158,11,.08) 0%, transparent 55%);
+    }
+    .portal-org-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: white; border: 1px solid #E7E5E4;
+      border-radius: 100px; padding: 5px 16px;
+      font-size: .72rem; font-weight: 600; color: #78716C;
+      letter-spacing: .04em; text-transform: uppercase;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      margin-bottom: 24px;
+    }
+    .portal-hero { text-align: center; margin-bottom: 40px; }
+    .portal-eyebrow {
+      font-size: .68rem; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: #F97316; margin-bottom: 10px;
+    }
+    .portal-title {
+      font-family: 'Playfair Display', 'Georgia', serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900; line-height: 1.05;
+      color: #1C1917; letter-spacing: -.02em;
+    }
+    .portal-title span {
+      background: linear-gradient(135deg, #F97316, #F59E0B);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .portal-sub { margin-top: 10px; font-size: .92rem; color: #78716C; font-weight: 500; }
+    .portal-dates { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+    .portal-date-chip {
+      background: white; border: 1.5px solid #E7E5E4;
+      border-radius: 100px; padding: 4px 13px;
+      font-size: .75rem; font-weight: 600; color: #78716C;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .portal-date-chip strong { color: #1C1917; }
+    .portal-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; width: 100%; max-width: 680px; }
+    @media (max-width: 540px) { .portal-cards { grid-template-columns: 1fr; } }
+    .portal-card {
+      position: relative; overflow: hidden;
+      background: white; border: 1.5px solid #E7E5E4;
+      border-radius: 22px; padding: 28px 24px 22px;
+      text-decoration: none; color: inherit;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      transition: transform .25s cubic-bezier(.34,1.3,.64,1), box-shadow .25s, border-color .2s;
+      display: flex; flex-direction: column;
+    }
+    .portal-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      border-radius: 22px 22px 0 0; opacity: 0; transition: opacity .2s;
+    }
+    .portal-card:hover { transform: translateY(-5px) scale(1.01); border-color: transparent; }
+    .portal-card-ci::before  { background: linear-gradient(90deg, #22C55E, #4ADE80); }
+    .portal-card-co::before  { background: linear-gradient(90deg, #F97316, #F59E0B); }
+    .portal-card-ci:hover { box-shadow: 0 16px 36px rgba(34,197,94,.18); }
+    .portal-card-co:hover { box-shadow: 0 16px 36px rgba(249,115,22,.18); }
+    .portal-card:hover::before { opacity: 1; }
+    .portal-card-icon {
+      width: 50px; height: 50px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; margin-bottom: 16px;
+      transition: transform .2s;
+    }
+    .portal-card:hover .portal-card-icon { transform: scale(1.1) rotate(-4deg); }
+    .portal-card-ci .portal-card-icon { background: #DCFCE7; }
+    .portal-card-co .portal-card-icon { background: #FEF3C7; }
+    .portal-card-lbl {
+      font-size: .6rem; font-weight: 800; letter-spacing: .12em;
+      text-transform: uppercase; margin-bottom: 5px;
+    }
+    .portal-card-ci .portal-card-lbl { color: #22C55E; }
+    .portal-card-co .portal-card-lbl { color: #F97316; }
+    .portal-card-title {
+      font-family: 'Playfair Display', 'Georgia', serif;
+      font-size: 1.45rem; font-weight: 700; color: #1C1917;
+      margin-bottom: 8px; line-height: 1.15;
+    }
+    .portal-card-desc { font-size: .8rem; color: #78716C; line-height: 1.6; font-weight: 500; flex: 1; }
+    .portal-features { display: flex; flex-direction: column; gap: 5px; margin: 10px 0 0; }
+    .portal-feature { display: flex; align-items: center; gap: 7px; font-size: .75rem; color: #78716C; font-weight: 500; }
+    .portal-feature-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .portal-card-ci .portal-feature-dot { background: #22C55E; }
+    .portal-card-co .portal-feature-dot { background: #F97316; }
+    .portal-card-footer {
+      margin-top: 20px; padding-top: 14px; border-top: 1px solid #E7E5E4;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .portal-card-who { font-size: .68rem; font-weight: 600; color: #78716C; text-transform: uppercase; letter-spacing: .06em; }
+    .portal-card-arrow {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; transition: transform .2s;
+    }
+    .portal-card:hover .portal-card-arrow { transform: translateX(3px); }
+    .portal-card-ci .portal-card-arrow { background: #DCFCE7; color: #166534; }
+    .portal-card-co .portal-card-arrow { background: #FEF3C7; color: #92400E; }
+  </style>
+
+  <div class="portal-wrap">
+    <div class="portal-org-badge">⛪ India Christian Assembly NJ</div>
+    <div class="portal-hero">
+      <div class="portal-eyebrow">Vacation Bible School</div>
+      <h2 class="portal-title">VBS <span>2026</span></h2>
+      <p class="portal-sub">Staff Portal · Attendance Management</p>
+      <div class="portal-dates">
+        <div class="portal-date-chip"><strong>Day 1</strong> · Thu, July 9</div>
+        <div class="portal-date-chip"><strong>Day 2</strong> · Fri, July 10</div>
+        <div class="portal-date-chip"><strong>Day 3</strong> · Sat, July 11</div>
+      </div>
+    </div>
+
+    <div class="portal-cards">
+      <a class="portal-card portal-card-ci" href="https://anit-mathew.github.io/Check-in-out-vbs2026/checkin.html" target="_blank">
+        <div class="portal-card-icon">✅</div>
+        <div class="portal-card-lbl">Registration Desk</div>
+        <div class="portal-card-title">Check In</div>
+        <div class="portal-card-desc">Welcome children as they arrive. Search by name, verify details, and mark attendance.</div>
+        <div class="portal-features">
+          <div class="portal-feature"><div class="portal-feature-dot"></div>Search child by name</div>
+          <div class="portal-feature"><div class="portal-feature-dot"></div>View allergy alerts</div>
+          <div class="portal-feature"><div class="portal-feature-dot"></div>Live attendance counters</div>
+          <div class="portal-feature"><div class="portal-feature-dot"></div>Class-by-class breakdown</div>
+        </div>
+        <div class="portal-card-footer">
+          <div class="portal-card-who">👤 Registration Volunteers</div>
+          <div class="portal-card-arrow">→</div>
+        </div>
+      </a>
+
+      <a class="portal-card portal-card-co" href="https://anit-mathew.github.io/Check-in-out-vbs2026/checkout.html" target="_blank">
+        <div class="portal-card-icon">🏁</div>
+        <div class="portal-card-lbl">Teacher View</div>
+        <div class="portal-card-title">Check Out</div>
+        <div class="portal-card-desc">Release children safely at end of session. Confirm lanyard collection and log departure.</div>
+        <div class="portal-features">
+          <div class="portal-feature"><div class="portal-feature-dot"></div>Filter by class</div>
+          <div class="portal-feature"><div class="portal-feature-dot"></div>Lanyard confirmation</div>
+          <div class="portal-feature"><div class="portal-feature-dot"></div>Teacher name logging</div>
+          <div class="portal-feature"><div class="portal-feature-dot"></div>Real-time sync</div>
+        </div>
+        <div class="portal-card-footer">
+          <div class="portal-card-who">👤 Class Teachers</div>
+          <div class="portal-card-arrow">→</div>
+        </div>
+      </a>
+    </div>
   </div>
 </div>
 
